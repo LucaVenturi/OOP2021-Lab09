@@ -1,4 +1,4 @@
-package it.unibo.oop.lab.reactivegui02;
+package it.unibo.oop.lab.reactivegui03;
 
 import java.awt.Dimension;
 import java.awt.Toolkit;
@@ -13,13 +13,18 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 /**
- * This is a first example on how to realize a reactive GUI.
+ * 
+ *
  */
-public final class ConcurrentGUI extends JFrame {
+public class AnotherConcurrentGUI extends JFrame {
 
-    private static final long serialVersionUID = 6691913588913737889L;
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -8710276539980695794L;
     private static final double WIDTH_PERC = 0.2;
     private static final double HEIGHT_PERC = 0.1;
+    private static final int COUNTDOWN = 10_000;
     private final JLabel display = new JLabel();
     private final JButton stop = new JButton("stop");
     private final JButton up = new JButton("up");
@@ -28,7 +33,7 @@ public final class ConcurrentGUI extends JFrame {
     /**
      * Builds a new CGUI.
      */
-    public ConcurrentGUI() {
+    public AnotherConcurrentGUI() {
         super();
         final Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         this.setSize((int) (screenSize.getWidth() * WIDTH_PERC), (int) (screenSize.getHeight() * HEIGHT_PERC));
@@ -48,6 +53,21 @@ public final class ConcurrentGUI extends JFrame {
         final Agent agent = new Agent();
         new Thread(agent).start();
         /*
+         * Create the countdown agent and start it.
+         */
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(COUNTDOWN);
+                    disableButtons();
+                    agent.stopCounting();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+        /*
          * Register a listener that stops it
          */
         stop.addActionListener(new ActionListener() {
@@ -61,9 +81,7 @@ public final class ConcurrentGUI extends JFrame {
             public void actionPerformed(final ActionEvent e) {
                 // Agent should be final
                 agent.stopCounting();
-                up.setEnabled(false);
-                down.setEnabled(false);
-                stop.setEnabled(false);
+                disableButtons();
             }
         });
         up.addActionListener(new ActionListener() {
@@ -78,6 +96,12 @@ public final class ConcurrentGUI extends JFrame {
                 agent.goDown();
             }
         });
+    }
+
+    private void disableButtons() {
+        up.setEnabled(false);
+        down.setEnabled(false);
+        stop.setEnabled(false);
     }
 
     /*
@@ -111,7 +135,7 @@ public final class ConcurrentGUI extends JFrame {
                         @Override
                         public void run() {
                             // This will happen in the EDT: since i'm reading counter it needs to be volatile.
-                            ConcurrentGUI.this.display.setText(Integer.toString(Agent.this.counter));
+                            AnotherConcurrentGUI.this.display.setText(Integer.toString(Agent.this.counter));
                         }
                     });
                     /*
